@@ -1,0 +1,31 @@
+# Build artifacts
+dist/
+build/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Bundled binaries (large, rebuild from source)
+graphviz_bin/
+
+# Output files (generated, not source)
+survey-results*.xlsx
+ranked-pairs-graph.pdf
+ranked-pairs-graph.png
+victory-graph.pdf
+victory-graph.png
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+DEVELOPMENT_LOG.md
+ballots.csv

@@ -1,0 +1,152 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Graphviz
+        run: brew install graphviz
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller==6.17.0 flet==0.28.3 pandas networkx openpyxl graphviz
+
+      - name: Prepare Graphviz binaries for bundling
+        run: |
+          mkdir -p graphviz_bin
+          # Copy Graphviz binaries from Homebrew
+          GRAPHVIZ_BIN=$(brew --prefix graphviz)/bin
+          cp "$GRAPHVIZ_BIN/dot" graphviz_bin/
+          cp "$GRAPHVIZ_BIN/neato" graphviz_bin/
+          cp "$GRAPHVIZ_BIN/fdp" graphviz_bin/
+          cp "$GRAPHVIZ_BIN/sfdp" graphviz_bin/
+          cp "$GRAPHVIZ_BIN/twopi" graphviz_bin/
+          cp "$GRAPHVIZ_BIN/circo" graphviz_bin/
+
+          # Copy required libraries
+          GRAPHVIZ_LIB=$(brew --prefix graphviz)/lib
+          cp -R "$GRAPHVIZ_LIB"/*.dylib graphviz_bin/ 2>/dev/null || true
+
+          # Make binaries executable
+          chmod +x graphviz_bin/*
+
+          echo "Graphviz binaries prepared:"
+          ls -la graphviz_bin/
+
+      - name: Build macOS app
+        run: |
+          python -m PyInstaller --onefile --windowed \
+            --name "RankedPairsVoting" \
+            --add-data "graphviz_bin:graphviz_bin" \
+            --add-data "ranked_pairs_voting.py:." \
+            --hidden-import=flet \
+            --hidden-import=pandas \
+            --hidden-import=networkx \
+            --hidden-import=openpyxl \
+            --hidden-import=graphviz \
+            --collect-all flet \
+            voting_app.py
+
+      - name: Create DMG (optional packaging)
+        run: |
+          # Create a simple zip for now
+          cd dist
+          zip -r RankedPairsVoting-macOS.zip RankedPairsVoting.app 2>/dev/null || zip -r RankedPairsVoting-macOS.zip RankedPairsVoting
+          ls -la
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RankedPairsVoting-macOS
+          path: dist/RankedPairsVoting-macOS.zip
+          if-no-files-found: error
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller==6.17.0 flet==0.28.3 pandas networkx openpyxl graphviz
+
+      - name: Install Graphviz
+        run: choco install graphviz -y
+
+      - name: Prepare Graphviz binaries for bundling
+        run: |
+          mkdir graphviz_bin
+          Copy-Item -Path "C:\Program Files\Graphviz\bin\*" -Destination graphviz_bin -Recurse
+          Write-Host "Graphviz binaries:"
+          Get-ChildItem graphviz_bin
+        shell: pwsh
+
+      - name: Build Windows executable
+        run: |
+          python -m PyInstaller --onefile --windowed `
+            --name "RankedPairsVoting" `
+            --add-data "graphviz_bin;graphviz_bin" `
+            --add-data "ranked_pairs_voting.py;." `
+            --hidden-import=flet `
+            --hidden-import=pandas `
+            --hidden-import=networkx `
+            --hidden-import=openpyxl `
+            --hidden-import=graphviz `
+            --collect-all flet `
+            voting_app.py
+        shell: pwsh
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RankedPairsVoting-Windows
+          path: dist/RankedPairsVoting.exe
+          if-no-files-found: error
+
+  # Create release when a tag is pushed
+  release:
+    needs: [build-macos, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure
+        run: ls -R artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/RankedPairsVoting-macOS/RankedPairsVoting-macOS.zip
+            artifacts/RankedPairsVoting-Windows/RankedPairsVoting.exe
+          generate_release_notes: true

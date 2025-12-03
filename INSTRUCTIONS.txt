@@ -1,0 +1,115 @@
+RANKED PAIRS VOTING - Quick Start
+==================================
+
+This tool processes Qualtrics voting ballots using the Ranked Pairs
+(Tideman) method to produce a fair ranking of candidates.
+
+
+HOW TO USE
+----------
+
+1. Export your Qualtrics survey results as CSV:
+   - In Qualtrics, go to Data & Analysis
+   - Click Export & Import → Export Data
+   - Choose CSV format and download
+
+2. Run RankedPairsVoting.exe (double-click)
+
+3. Click "Select Ballot CSV" and choose your exported file
+
+4. Click "Run Ranked Pairs"
+
+5. Results are saved to the same folder as your CSV:
+   - survey-results YYYY-MM-DD.xlsx  (rankings and matchup data)
+   - ranked-pairs-graph.pdf          (visual ranking)
+   - victory-graph.pdf               (head-to-head victories)
+
+
+INTERPRETING RESULTS
+--------------------
+
+The Excel file contains:
+- Results sheet: Final ranking with Borda scores
+- Matchups sheet: Head-to-head margin matrix
+- Notes sheet: Any warnings (ties, missing votes, etc.)
+
+If the app shows "CHAIR REVIEW NEEDED":
+- There are ties the algorithm couldn't resolve
+- Look at the ranked-pairs-graph.pdf
+- The chair picks any ordering consistent with the arrows
+
+
+TROUBLESHOOTING
+---------------
+
+"Missing votes" warning:
+  Some voters left candidates unranked. By default these are
+  treated as "no preference." Use the dropdown to change this.
+
+Graphs not generating:
+  The PDF graphs require Graphviz. The bundled version should
+  work automatically. If not, install from: https://graphviz.org
+
+
+BUILDING FROM SOURCE
+--------------------
+
+If you prefer to build the executable yourself:
+
+WINDOWS:
+
+1. Install Python 3.13+ from https://python.org
+
+2. Install Graphviz from https://graphviz.org/download/
+   (Add to PATH during installation)
+
+3. Install Python dependencies:
+   pip install pyinstaller flet pandas networkx openpyxl graphviz
+
+4. Clone or download this repository
+
+5. Copy Graphviz binaries to graphviz_bin folder:
+   mkdir graphviz_bin
+   copy "C:\Program Files\Graphviz\bin\*" graphviz_bin\
+
+6. Run the build script:
+   build_exe_flet.bat
+
+7. The executable will be in the dist folder
+
+
+macOS:
+
+1. Install Python 3.13+ (via Homebrew or python.org):
+   brew install python@3.13
+
+2. Install Graphviz:
+   brew install graphviz
+
+3. Install Python dependencies:
+   pip install pyinstaller flet pandas networkx openpyxl graphviz
+
+4. Clone or download this repository
+
+5. Copy Graphviz binaries to graphviz_bin folder:
+   mkdir -p graphviz_bin
+   cp $(brew --prefix graphviz)/bin/{dot,neato,fdp,sfdp,twopi,circo} graphviz_bin/
+   cp $(brew --prefix graphviz)/lib/*.dylib graphviz_bin/
+
+6. Build with PyInstaller:
+   python -m PyInstaller --onefile --windowed \
+     --name "RankedPairsVoting" \
+     --add-data "graphviz_bin:graphviz_bin" \
+     --add-data "ranked_pairs_voting.py:." \
+     --hidden-import=flet \
+     --hidden-import=pandas \
+     --hidden-import=networkx \
+     --hidden-import=openpyxl \
+     --hidden-import=graphviz \
+     --collect-all flet \
+     voting_app.py
+
+7. The app will be in the dist folder
+
+
+See README.md for detailed documentation.
