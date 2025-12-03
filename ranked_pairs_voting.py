@@ -648,7 +648,7 @@ def create_results_excel(
             })
             notes.append({
                 'Type': 'INFO',
-                'Message': 'See ranked-pairs-graph.pdf to manually resolve ties'
+                'Message': 'See resolved-ranking.pdf to manually resolve ties'
             })
 
         if problematic_ballots:
@@ -926,8 +926,8 @@ def process_ballots(
     # Generate outputs
     date_str = time.strftime("%Y-%m-%d")
     excel_path = output_dir / f"survey-results {date_str}.xlsx"
-    rp_graph_path = output_dir / "ranked-pairs-graph.pdf"
-    victory_graph_path = output_dir / "victory-graph.pdf"
+    rp_graph_path = output_dir / "resolved-ranking.pdf"
+    victory_graph_path = output_dir / "head-to-head-results.pdf"
 
     create_results_excel(results, candidates, excel_path, problematic)
 
@@ -1001,7 +1001,7 @@ Examples:
         if results.has_ties:
             print("\n⚠️  TIES DETECTED - CHAIR INTERVENTION NEEDED")
             print(f"   {results.tie_description}")
-            print("\n   See 'ranked-pairs-graph.pdf' to resolve ties manually.\n")
+            print("\n   See 'resolved-ranking.pdf' to resolve ties manually.\n")
 
         print("\nRanking (by Ranked Pairs, with Borda scores):\n")
         for i, candidate in enumerate(results.ranked_pairs_ranking):

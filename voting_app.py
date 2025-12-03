@@ -202,8 +202,8 @@ def main(page: ft.Page):
 
             date_str = time.strftime("%Y-%m-%d")
             excel_path = Path(output_dir) / f"survey-results {date_str}.xlsx"
-            rp_graph_path = Path(output_dir) / "ranked-pairs-graph.pdf"
-            victory_graph_path = Path(output_dir) / "victory-graph.pdf"
+            rp_graph_path = Path(output_dir) / "resolved-ranking.pdf"
+            victory_graph_path = Path(output_dir) / "head-to-head-results.pdf"
 
             create_results_excel(results, candidates, excel_path, problematic)
 

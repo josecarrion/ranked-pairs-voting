@@ -54,8 +54,8 @@ python ranked_pairs_voting.py your-ballots.csv --verbose
 
 Either method produces:
 - `survey-results YYYY-MM-DD.xlsx` - Results spreadsheet
-- `ranked-pairs-graph.pdf` - Visual showing the final ranking
-- `victory-graph.pdf` - Visual showing who beats whom
+- `resolved-ranking.pdf` - Visual showing the final ranking
+- `head-to-head-results.pdf` - Visual showing all pairwise victories
 
 ## Understanding the Method
 
@@ -109,14 +109,18 @@ Warnings about ties requiring chair intervention, or ballots with missing votes.
 
 ### The Graphs
 
-**ranked-pairs-graph.pdf:**
-- Shows the final ranking as a directed graph
-- An arrow from A to B means A is ranked above B
+**head-to-head-results.pdf:**
+- Shows all pairwise victories
+- An arrow from A to B means A beat B head-to-head
+- This graph can contain cycles (A beats B, B beats C, C beats A) when there's no clear Condorcet winner
+
+**resolved-ranking.pdf:**
+- The final ranking after applying the Ranked Pairs algorithm
+- Conflicting edges that would create cycles are removed, leaving a clean top-to-bottom ordering
+- This is the official result
 - If there are ties, the title will say "CHAIR REVIEW NEEDED"
 
-**victory-graph.pdf:**
-- Shows all head-to-head victories
-- Useful for understanding close races
+When there are no cycles, both graphs look similar. When cycles exist (ties), comparing the two shows which victories were "overruled" to produce a consistent ranking.
 
 ## When There Are Ties
 
