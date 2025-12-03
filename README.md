@@ -52,6 +52,8 @@ Double-click `RankedPairsVoting.exe` to launch the graphical interface:
 python ranked_pairs_voting.py your-ballots.csv --verbose
 ```
 
+**Try it out:** A sample ballot file (`sample-ballots.csv`) is included so you can test the app before using it with real data.
+
 Either method produces:
 - `survey-results YYYY-MM-DD.xlsx` - Results spreadsheet
 - `resolved-ranking.pdf` - Visual showing the final ranking
