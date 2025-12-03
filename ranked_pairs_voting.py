@@ -764,6 +764,8 @@ def create_graph_graphviz(
     if bundled_path:
         import os
         os.environ['PATH'] = str(bundled_path) + os.pathsep + os.environ.get('PATH', '')
+        # Also set font path so Graphviz finds bundled DejaVu Sans font
+        os.environ['GDFONTPATH'] = str(bundled_path)
 
     # Create a new directed graph
     dot = graphviz.Digraph(comment=title)

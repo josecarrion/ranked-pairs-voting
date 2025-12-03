@@ -47,6 +47,9 @@ jobs:
           # Make binaries executable
           chmod +x graphviz_bin/*
 
+          # Download DejaVu Sans font for consistent graph rendering
+          curl -L -o graphviz_bin/DejaVuSans.ttf https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf
+
           echo "Graphviz binaries prepared:"
           ls -la graphviz_bin/
 
@@ -95,6 +98,10 @@ jobs:
         run: |
           mkdir graphviz_bin
           Copy-Item -Path "C:\Program Files\Graphviz\bin\*" -Destination graphviz_bin -Recurse
+
+          # Download DejaVu Sans font for consistent graph rendering
+          Invoke-WebRequest -Uri "https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf" -OutFile "graphviz_bin\DejaVuSans.ttf"
+
           Write-Host "Graphviz binaries:"
           Get-ChildItem graphviz_bin
         shell: pwsh
