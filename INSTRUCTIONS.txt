@@ -11,7 +11,9 @@ HOW TO USE
 1. Export your Qualtrics survey results as CSV:
    - In Qualtrics, go to Data & Analysis
    - Click Export & Import → Export Data
-   - Choose CSV format and download
+   - Choose CSV format
+   - Select "Export values" (not "Export labels")
+   - Download and save the file
 
 2. Run RankedPairsVoting.exe (double-click)
 

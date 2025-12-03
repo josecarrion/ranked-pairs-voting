@@ -26,18 +26,45 @@ Voters can:
 - Skip candidates they don't want to rank
 - Include a "Do not hire" option as a threshold
 
-### Step 2: Collect Votes
+### Step 2: Configure Security Settings
 
-Send the survey link to eligible voters. The survey is anonymous.
+To ensure each faculty member can only vote once while keeping votes anonymous (even to you):
 
-### Step 3: Export from Qualtrics
+1. **Enable Invitation-Only Access:**
+   - Go to **Survey** → **Survey Options** (icon on the left) → **Security**
+   - Set **Survey Access** to **"Invitation only"**
+   - Enable **"Prevent multiple submissions"**
+
+2. **Enable Anonymization:**
+   - In the same Security tab, enable **"Anonymize responses"**
+   - This disconnects responses from contact records
+
+**Sources:**
+- [Qualtrics: Security Survey Options](https://www.qualtrics.com/support/survey-platform/survey-module/survey-options/survey-protection/)
+- [Qualtrics: Anonymize Responses](https://www.qualtrics.com/support/survey-platform/sp-administration/data-privacy-tab/anonymous-responses-admin/)
+
+### Step 3: Collect Votes
+
+1. Go to **Distributions** → **Emails** → **Compose Email**
+2. Click **Select Contacts** in the recipient field
+3. Create a new contact list (or select existing):
+   - Click **New Contact List**
+   - Name it (e.g., "2025 Instructor Hiring Vote: Zoom interviews")
+   - Enter emails manually or import a CSV
+4. Compose your invitation email
+5. Click **Send**
+
+Each voter receives a unique, one-time-use link. You can send reminders to non-respondents without seeing their votes.
+
+### Step 4: Export from Qualtrics
 
 1. Go to **Data & Analysis** in your Qualtrics survey
 2. Click **Export & Import** → **Export Data**
 3. Choose **CSV** format
-4. Download and save the file
+4. Select **"Export values"** (not "Export labels")
+5. Download and save the file
 
-### Step 4: Run the App
+### Step 5: Run the App
 
 **Option A: Desktop App (recommended)**
 
