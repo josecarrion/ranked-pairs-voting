@@ -9,6 +9,7 @@ __pycache__/
 *.pyo
 venv/
 .venv/
+.venv-win/
 
 # Bundled binaries (large, rebuild from source)
 graphviz_bin/

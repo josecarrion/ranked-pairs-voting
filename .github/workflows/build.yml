@@ -50,19 +50,13 @@ jobs:
           echo "Graphviz binaries prepared:"
           ls -la graphviz_bin/
 
-      - name: Build macOS app
+      - name: Build macOS app with flet pack
         run: |
-          python -m PyInstaller --onefile --windowed \
+          flet pack voting_app.py \
             --name "RankedPairsVoting" \
             --add-data "graphviz_bin:graphviz_bin" \
             --add-data "ranked_pairs_voting.py:." \
-            --hidden-import=flet \
-            --hidden-import=pandas \
-            --hidden-import=networkx \
-            --hidden-import=openpyxl \
-            --hidden-import=graphviz \
-            --collect-all flet \
-            voting_app.py
+            -y
 
       - name: Create DMG (optional packaging)
         run: |
@@ -105,19 +99,13 @@ jobs:
           Get-ChildItem graphviz_bin
         shell: pwsh
 
-      - name: Build Windows executable
+      - name: Build Windows executable with flet pack
         run: |
-          python -m PyInstaller --onefile --windowed `
+          flet pack voting_app.py `
             --name "RankedPairsVoting" `
             --add-data "graphviz_bin;graphviz_bin" `
             --add-data "ranked_pairs_voting.py;." `
-            --hidden-import=flet `
-            --hidden-import=pandas `
-            --hidden-import=networkx `
-            --hidden-import=openpyxl `
-            --hidden-import=graphviz `
-            --collect-all flet `
-            voting_app.py
+            -y
         shell: pwsh
 
       - name: Upload Windows artifact
