@@ -226,7 +226,7 @@ def parse_ballots(
 
         ballots.append(ballot)
         if has_problem:
-            response_id = df.iloc[idx + 2].get('ResponseId', f'row {idx}')
+            response_id = df.loc[idx].get('ResponseId', f'row {idx}')
             problematic_ids.append(response_id)
 
     return ballots, problematic_ids
@@ -695,7 +695,8 @@ def create_graph_pdf(
     agraph.graph_attr['rankdir'] = 'TB'
 
     if title:
-        agraph.graph_attr['label'] = title
+        agraph.graph_attr['label'] = f'<{title}<BR/><BR/>>'
+        agraph.graph_attr['labelloc'] = 't'
 
     # Group nodes at same level (cycles = ties)
     try:
@@ -936,8 +937,8 @@ def process_ballots(
 
     # Generate graphs (use simplified versions for cleaner output)
     title = "RANKED PAIRS - CHAIR REVIEW NEEDED" if has_ties else "Ranked Pairs Result"
-    create_graph_pdf(simplified_rp_graph, rp_graph_path, title)
-    create_graph_pdf(simplified_victory, victory_graph_path, "Victory Graph")
+    create_graph(simplified_rp_graph, rp_graph_path, title)
+    create_graph(simplified_victory, victory_graph_path, "Victory Graph")
 
     if verbose:
         print(f"Saved graphs to {rp_graph_path} and {victory_graph_path}")

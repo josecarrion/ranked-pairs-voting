@@ -21,6 +21,12 @@ ranked-pairs-graph.png
 victory-graph.pdf
 victory-graph.png
 
+# Environment files (secrets, tokens, API keys)
+.env
+.env.*
+*.env
+.envrc
+
 # OS files
 .DS_Store
 Thumbs.db
