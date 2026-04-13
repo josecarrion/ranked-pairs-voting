@@ -64,17 +64,47 @@ Either method produces a results spreadsheet (`survey-results YYYY-MM-DD.xlsx`) 
 
 ## Method
 
-The script uses Ranked Pairs (Tideman 1987):
+The script uses a variant of Ranked Pairs (Tideman 1987). The output is a partial order on the candidates: every pair that the votes resolve cleanly is ordered, and any pair that the votes leave genuinely tied is left unordered, to be settled by the chair. When the votes resolve all pairs, the partial order is a linear ranking and there is nothing for the chair to do.
 
-1. **Compare every pair of candidates.** For each pair (A, B), count how many voters ranked A above B and vice versa. The one with more votes wins that matchup.
+### Step 1: Build the head-to-head table
 
-2. **Sort the matchups by margin.** A matchup where A beats B 15–3 is stronger than one where C beats D 9–7.
+For each unordered pair of candidates `{A, B}`, count two numbers from the ballots:
 
-3. **Lock in results, strongest first.** Starting with the strongest matchup, lock in results to build a ranking, skipping any result that would create a cycle (A > B > C > A).
+- `n(A, B)` = the number of ballots that rank `A` strictly above `B`
+- `n(B, A)` = the number of ballots that rank `B` strictly above `A`
 
-4. **The locked-in matchups give the final ranking.**
+Ballots that rank `A` and `B` equally, or that omit one of them, contribute to neither count.
 
-The method guarantees a Condorcet winner when one exists: if some candidate would beat every other candidate head-to-head, that candidate wins. It avoids vote-splitting between similar candidates, and it produces a complete ranking, which matters when top candidates decline offers.
+If `n(A, B) > n(B, A)`, record an arrow `A → B` with margin `n(A, B) − n(B, A)`. If the two counts are exactly equal, record nothing for that pair.
+
+### Step 2: Sort the arrows by margin
+
+List every recorded arrow from largest margin to smallest. Group together any arrows that have exactly the same margin; these will be processed simultaneously.
+
+### Step 3: Lock in arrows, group by group
+
+Start with a blank diagram showing only the candidate names and no arrows. Then, working from the largest-margin group of arrows down to the smallest:
+
+1. Tentatively draw every arrow in the current group on top of the diagram.
+2. For each arrow `A → B` in the current group, check whether you can now follow arrows from `B` back to `A` (using any combination of arrows already locked in plus the tentative arrows from this group). If you can, the arrow `A → B` is part of a cycle — erase it.
+3. The arrows from the current group that survive Step 3.2 are now locked in permanently.
+4. Move on to the next group.
+
+### Step 4: Read off the partial order
+
+The locked-in diagram defines a partial ordering of the candidates: `A` is ranked above `B` if and only if there is a (directed) path from `A` to `B`. Some pairs may have no path between them in either direction; those are the unresolved pairs.
+
+If for every two candidates there is a path one way or the other, the partial order is total and you can read off a linear ranking directly: the candidate with no incoming arrows is first, then remove that candidate and repeat.
+
+Otherwise, the chair must choose any total ordering that is consistent with the diagram: the chair essentially adds arrows to the diagram so that there are no cycles and a total order is obtained. The script's spreadsheet groups tied candidates together with a `~` prefix, and `resolved-ranking.pdf` shows the diagram so the chair can see which orderings are acceptable. (This tie-breaking step is due to George Gilbert.)
+
+### Why it works
+
+The procedure guarantees a Condorcet winner when one exists. If some candidate `C` would beat every other candidate head-to-head, then for each other `X` the recorded arrow is `C → X` and there is no arrow into `C` anywhere. The arrow `C → X` can never be erased, because erasure requires a path from `X` back to `C`, which would have to enter `C` along an arrow that doesn't exist. So `C` ends up at the top of the diagram with a path to every other candidate.
+
+It also avoids vote-splitting: similar candidates do not hurt each other, because every pair is judged on its own head-to-head margin rather than on first-place counts.
+
+The cost of refusing to make arbitrary choices on equal-margin conflicts is that the procedure can return a partial order rather than a linear one.
 
 ## Output
 
@@ -100,7 +130,7 @@ The Ranked Pairs rank is the final ordering (1 = winner). The Borda score is the
 
 ## Ties
 
-Sometimes the method cannot produce a complete ranking: two candidates have identical support, or there's a rock-paper-scissors situation (A > B > C > A). When this happens the script flags it, the spreadsheet shows approximate rankings with a `~` prefix, and the graph shows where the ambiguity is. The chair then reviews the graph and chooses any ordering consistent with the arrows shown. The algorithm has already resolved everything it can; the remaining ambiguity is a genuine tie in voter preferences. (Tie-breaking procedure due to George Gilbert.)
+When the procedure leaves some pairs unresolved (because of equal head-to-head support or a rock-paper-scissors situation like A > B > C > A), the script flags it: the spreadsheet shows approximate rankings with a `~` prefix and `resolved-ranking.pdf` is titled "CHAIR REVIEW NEEDED". The chair then chooses any total ordering consistent with the diagram, as described in Step 4 of the Method. The algorithm has already resolved everything it can; the remaining ambiguity is a genuine tie in voter preferences.
 
 ## Edge cases
 
