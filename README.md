@@ -86,7 +86,7 @@ List every recorded arrow from largest margin to smallest. Group together any ar
 Start with a blank diagram showing only the candidate names and no arrows. Then, working from the largest-margin group of arrows down to the smallest:
 
 1. Tentatively draw every arrow in the current group on top of the diagram.
-2. For each arrow `A → B` in the current group, check whether you can now follow arrows from `B` back to `A` (using any combination of arrows already locked in plus the tentative arrows from this group). If you can, the arrow `A → B` is part of a cycle — erase it.
+2. For each arrow `A → B` in the current group, check whether you can now follow arrows from `B` back to `A` (using any combination of arrows already locked in plus the tentative arrows from this group). If you can, the arrow `A → B` is part of a cycle and should be erased.
 3. The arrows from the current group that survive Step 3.2 are now locked in permanently.
 4. Move on to the next group.
 
