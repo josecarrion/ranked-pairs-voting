@@ -1,34 +1,20 @@
-# Ranked Pairs Voting for Faculty Hiring
+# Ranked Pairs Voting
 
-This document explains how the department uses ranked-choice voting to make hiring decisions, and how to run the script that tallies the votes.
+This document describes how the department uses ranked-choice voting and how to run the script that tallies the votes. Hiring decisions are the most common use (who to invite for on-campus interviews, who to make an offer to), but the same method works for any departmental vote with more than two options.
 
-## The Problem We're Solving
+## Running a vote
 
-When the department votes on candidates (e.g., who to invite for on-campus interviews, or who to make an offer to), we want a fair method that:
+### Step 1: Create the Qualtrics survey
 
-1. Lets everyone express their full preferences, not just their top choice
-2. Finds a winner that the majority prefers, when one exists
-3. Produces a complete ranking, not just a winner (useful for backup candidates)
-4. Handles ties transparently
-
-Simple "pick your favorite" voting can produce bad outcomes when there are more than two candidates. For example, if 60% of voters prefer candidates A or B over C, but they split evenly between A and B, then C could win with only 40% support.
-
-## How the Voting Works
-
-### Step 1: Create the Qualtrics Survey
-
-Set up a Qualtrics survey with a single question listing all candidates. Use the "Form field" question type, with one text field per candidate where voters enter a positive integer (1 = top choice, 2 = second choice, etc.).
+Set up a Qualtrics survey with a single question listing all options. Use the "Form field" question type, with one text field per option where voters enter a positive integer (1 = top choice, 2 = second choice, etc.).
 
 ![Qualtrics survey setup example](qualtrics-setup.png)
 
-Voters can:
-- Give different candidates the same number (a tie in their personal ranking)
-- Skip candidates they don't want to rank
-- Include a "Do not hire" option as a threshold
+Voters can give different options the same number (a tie in their personal ranking), skip options they don't want to rank, and use a threshold option (e.g. "Do not hire", "None of the above") to indicate that anything ranked below it is unacceptable.
 
-### Step 2: Configure Security Settings
+### Step 2: Configure security settings
 
-To ensure each faculty member can only vote once while keeping votes anonymous (even to you):
+To ensure each faculty member can vote only once while keeping votes anonymous (even from you):
 
 1. **Enable Invitation-Only Access:**
    - Go to **Survey** → **Survey Options** (icon on the left) → **Security**
@@ -39,11 +25,11 @@ To ensure each faculty member can only vote once while keeping votes anonymous (
    - In the same Security tab, enable **"Anonymize responses"**
    - This disconnects responses from contact records
 
-**Sources:**
+References:
 - [Qualtrics: Security Survey Options](https://www.qualtrics.com/support/survey-platform/survey-module/survey-options/survey-protection/)
 - [Qualtrics: Anonymize Responses](https://www.qualtrics.com/support/survey-platform/sp-administration/data-privacy-tab/anonymous-responses-admin/)
 
-### Step 3: Collect Votes
+### Step 3: Collect votes
 
 1. Go to **Distributions** → **Emails** → **Compose Email**
 2. Click **Select Contacts** in the recipient field
@@ -51,165 +37,93 @@ To ensure each faculty member can only vote once while keeping votes anonymous (
    - Click **New Contact List**
    - Name it (e.g., "2025 Instructor Hiring Vote: Zoom interviews")
    - Enter emails manually or import a CSV
-4. Compose your invitation email
+4. Compose the invitation email
 5. Click **Send**
 
-Each voter receives a unique, one-time-use link. You can send reminders to non-respondents without seeing their votes.
+Each voter receives a unique, one-time-use link. Reminders can be sent to non-respondents without exposing votes.
 
 ### Step 4: Export from Qualtrics
 
-1. Go to **Data & Analysis** in your Qualtrics survey
+1. Go to **Data & Analysis** in the Qualtrics survey
 2. Click **Export & Import** → **Export Data**
 3. Choose **CSV** format
 4. Select **"Export values"** (not "Export labels")
 5. Download and save the file
 
-### Step 5: Run the App
+### Step 5: Run the app
 
-**Option A: Desktop App (recommended)**
+Double-click `RankedPairsVoting.exe` to launch the GUI: select the exported ballot CSV, click "Run Ranked Pairs", and results are saved to the same folder as the CSV. A sample ballot file `sample-ballots.csv` is included for testing.
 
-Double-click `RankedPairsVoting.exe` to launch the graphical interface:
-1. Click "Select Ballot CSV" and choose your exported file
-2. Click "Run Ranked Pairs"
-3. Results are saved to the same folder as your CSV
-
-**Option B: Command Line**
+Or, from the command line:
 
 ```
 python ranked_pairs_voting.py your-ballots.csv --verbose
 ```
 
-**Try it out:** A sample ballot file (`sample-ballots.csv`) is included so you can test the app before using it with real data.
+Either method produces a results spreadsheet (`survey-results YYYY-MM-DD.xlsx`), a final ranking graph (`resolved-ranking.pdf`), and a head-to-head graph (`head-to-head-results.pdf`).
 
-Either method produces:
-- `survey-results YYYY-MM-DD.xlsx` - Results spreadsheet
-- `resolved-ranking.pdf` - Visual showing the final ranking
-- `head-to-head-results.pdf` - Visual showing all pairwise victories
+## Method
 
-## Understanding the Method
+The script uses Ranked Pairs (Tideman 1987):
 
-### Ranked Pairs (Tideman Method)
+1. **Compare every pair of candidates.** For each pair (A, B), count how many voters ranked A above B and vice versa. The one with more votes wins that matchup.
 
-The script uses the **Ranked Pairs** method, developed by Nicolaus Tideman. Here's how it works in plain English:
+2. **Sort the matchups by margin.** A matchup where A beats B 15–3 is stronger than one where C beats D 9–7.
 
-1. **Compare every pair of candidates.** For each pair (A vs B), count how many voters ranked A above B, and vice versa. The one with more votes "wins" that matchup.
+3. **Lock in results, strongest first.** Starting with the strongest matchup, lock in results to build a ranking, skipping any result that would create a cycle (A > B > C > A).
 
-2. **Sort the matchups by margin.** A matchup where A beats B by 15-3 is "stronger" than one where C beats D by 9-7.
+4. **The locked-in matchups give the final ranking.**
 
-3. **Lock in results, strongest first.** Starting with the strongest matchup, we "lock in" results to build a ranking. But we skip any result that would create a contradiction (a cycle like A > B > C > A).
+The method guarantees a Condorcet winner when one exists: if some candidate would beat every other candidate head-to-head, that candidate wins. It avoids vote-splitting between similar candidates, and it produces a complete ranking, which matters when top candidates decline offers.
 
-4. **The final ranking is the result.** Once all matchups are processed, we have a complete ordering.
+## Output
 
-### Why This Method?
-
-- **Condorcet winner:** If one candidate would beat every other candidate head-to-head, they're guaranteed to win. This is the most intuitive notion of "majority preference."
-
-- **No vote splitting:** Unlike simple plurality voting, similar candidates don't hurt each other.
-
-- **Complete ranking:** We get 1st, 2nd, 3rd, etc., which is useful when top candidates decline offers.
-
-### Borda Scores
-
-The spreadsheet also shows "Borda scores" for each candidate. This is simpler: for each pair of candidates, we add up (wins minus losses) across all matchups. It's what the department used historically and serves as a sanity check.
-
-Usually Ranked Pairs and Borda agree. When they differ, Ranked Pairs is generally considered more theoretically sound.
-
-## Understanding the Output
-
-### The Excel File
+### The Excel file
 
 **Results sheet:**
+
 | Candidate | Ranked Pairs Rank | Borda Score |
 |-----------|-------------------|-------------|
 | Smith     | 1                 | +24         |
 | Jones     | 2                 | +12         |
 | ...       | ...               | ...         |
 
-- **Ranked Pairs Rank:** The final ordering (1 = winner)
-- **Borda Score:** Sum of pairwise margins (higher = better)
+The Ranked Pairs rank is the final ordering (1 = winner). The Borda score is the sum of pairwise margins across all matchups (wins minus losses); higher is better. Borda is what the department used historically and serves as a sanity check, but isn't as useful. Ranked Pairs and Borda usually agree; when they disagree, Ranked Pairs is the official result.
 
-**Matchups sheet:**
+**Matchups sheet:** a matrix of head-to-head margins. Entry (A, B) shows how many more voters preferred A over B than B over A. Positive means A is preferred.
 
-A matrix showing head-to-head margins. Entry (A, B) shows how many more voters preferred A over B than B over A. Positive means A is preferred.
+**Notes sheet:** warnings about ties requiring chair intervention, or ballots with missing votes.
 
-**Notes sheet:**
+### The graphs
 
-Warnings about ties requiring chair intervention, or ballots with missing votes.
+`head-to-head-results.pdf` shows all pairwise victories: an arrow from A to B means A beat B head-to-head. This graph can contain cycles (A beats B, B beats C, C beats A) when there is no Condorcet winner.
 
-### The Graphs
+`resolved-ranking.pdf` shows the final ranking after applying Ranked Pairs. Edges that would create cycles are removed, leaving a clean top-to-bottom ordering. This is the official result. If there are ties, the title says "CHAIR REVIEW NEEDED".
 
-**head-to-head-results.pdf:**
-- Shows all pairwise victories
-- An arrow from A to B means A beat B head-to-head
-- This graph can contain cycles (A beats B, B beats C, C beats A) when there's no clear Condorcet winner
+When there are no cycles the two graphs look similar. When cycles exist, comparing them shows which victories were overruled to produce a consistent ranking.
 
-**resolved-ranking.pdf:**
-- The final ranking after applying the Ranked Pairs algorithm
-- Conflicting edges that would create cycles are removed, leaving a clean top-to-bottom ordering
-- This is the official result
-- If there are ties, the title will say "CHAIR REVIEW NEEDED"
+## Ties
 
-When there are no cycles, both graphs look similar. When cycles exist (ties), comparing the two shows which victories were "overruled" to produce a consistent ranking.
+Sometimes the method cannot produce a complete ranking: two candidates have identical support, or there's a rock-paper-scissors situation (A > B > C > A). When this happens the script flags it, the spreadsheet shows approximate rankings with a `~` prefix, and the graphs show where the ambiguity is. The chair then reviews the graph and chooses any ordering consistent with the arrows shown. The algorithm has already resolved everything it can; the remaining ambiguity is a genuine tie in voter preferences. (Tie-breaking procedure due to George Gilbert.)
 
-## When There Are Ties
+## Edge cases
 
-Sometimes the method cannot produce a complete ranking. This happens when:
-- Two candidates have identical support
-- There's a rock-paper-scissors situation (A > B > C > A)
+**Missing votes.** If a voter leaves some candidates unranked, those candidates are treated as "no preference" for that voter by default — they don't count as wins or losses against other candidates. Use `--missing-votes worst` to treat unranked candidates as the worst choice instead.
 
-When this happens:
-1. The script flags it clearly
-2. The spreadsheet shows approximate rankings with "~" prefix
-3. The graphs show where the ambiguity is
-4. **The chair reviews the graph and makes the final call**
+**Threshold options.** For hiring votes, include a "Do not hire" option; for other votes, something like "None of the above", as appropriate.
 
-The chair should look at the graph and choose any ordering that's consistent with the arrows shown. The algorithm has already resolved everything it can - the remaining ambiguity represents genuine ties in voter preferences.
+## Command-line options
 
-This tie-breaking approach was developed by George Gilbert.
+- `--verbose`, `-v`: show progress information
+- `--output FOLDER`: save results to a different folder
+- `--missing-votes skip|worst|error`: how to handle missing votes
 
-## Handling Edge Cases
+The Python script requires Python 3.9+, `pandas`, `networkx`, `openpyxl`, and `graphviz` (plus a system Graphviz install for PDF graph output). The `.exe` bundles everything.
 
-### Missing Votes
+## Building the executable
 
-If a voter leaves some candidates unranked:
-- By default, those candidates are treated as "no preference" for that voter
-- They don't count as wins or losses against other candidates
-- Use `--missing-votes worst` to treat unranked candidates as worst choice
-
-### The "Do Not Hire" Option
-
-Include this as a candidate. If it ranks above a real candidate, that's a signal that the department prefers not hiring to hiring that person.
-
-## Quick Reference
-
-**To run the script:**
-```
-python ranked_pairs_voting.py ballots.csv --verbose
-```
-
-**Options:**
-- `--verbose` or `-v`: Show progress information
-- `--output FOLDER`: Save results to a different folder
-- `--missing-votes skip|worst|error`: How to handle missing votes
-
-**Requirements for .exe:**
-- None! The executable includes everything needed.
-
-**Requirements for Python script:**
-- Python 3.9+
-- pandas, networkx, openpyxl, graphviz
-- Graphviz installed on system (for PDF graph output)
-
-## Building the Executable
-
-To rebuild the standalone `.exe` (for developers):
-
-1. Ensure Python and pip are installed
-2. Run `build_exe_flet.bat`
-3. The executable will be created in the `dist` folder
+To rebuild the standalone `.exe`: ensure Python and pip are installed, run `build_exe_flet.bat`, and the executable will be created in the `dist` folder.
 
 ---
 
-*For more on Ranked Pairs: [Wikipedia](https://en.wikipedia.org/wiki/Ranked_pairs)*
-
-*For the mathematical details, see AlgorithmProposalGTG1.pdf.*
+*For more on Ranked Pairs: [Wikipedia](https://en.wikipedia.org/wiki/Ranked_pairs). For the mathematical details, see `AlgorithmProposalGTG1.pdf`.*
