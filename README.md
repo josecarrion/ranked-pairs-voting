@@ -60,7 +60,7 @@ Or, from the command line:
 python ranked_pairs_voting.py your-ballots.csv --verbose
 ```
 
-Either method produces a results spreadsheet (`survey-results YYYY-MM-DD.xlsx`), a final ranking graph (`resolved-ranking.pdf`), and a head-to-head graph (`head-to-head-results.pdf`).
+Either method produces a results spreadsheet (`survey-results YYYY-MM-DD.xlsx`) and a final ranking graph (`resolved-ranking.pdf`).
 
 ## Method
 
@@ -94,17 +94,13 @@ The Ranked Pairs rank is the final ordering (1 = winner). The Borda score is the
 
 **Notes sheet:** warnings about ties requiring chair intervention, or ballots with missing votes.
 
-### The graphs
+### The graph
 
-`head-to-head-results.pdf` shows all pairwise victories: an arrow from A to B means A beat B head-to-head. This graph can contain cycles (A beats B, B beats C, C beats A) when there is no Condorcet winner.
-
-`resolved-ranking.pdf` shows the final ranking after applying Ranked Pairs. Edges that would create cycles are removed, leaving a clean top-to-bottom ordering. This is the official result. If there are ties, the title says "CHAIR REVIEW NEEDED".
-
-When there are no cycles the two graphs look similar. When cycles exist, comparing them shows which victories were overruled to produce a consistent ranking.
+`resolved-ranking.pdf` shows the final ranking after applying Ranked Pairs as a clean top-to-bottom ordering. This is the official result. If there are ties, the title says "CHAIR REVIEW NEEDED".
 
 ## Ties
 
-Sometimes the method cannot produce a complete ranking: two candidates have identical support, or there's a rock-paper-scissors situation (A > B > C > A). When this happens the script flags it, the spreadsheet shows approximate rankings with a `~` prefix, and the graphs show where the ambiguity is. The chair then reviews the graph and chooses any ordering consistent with the arrows shown. The algorithm has already resolved everything it can; the remaining ambiguity is a genuine tie in voter preferences. (Tie-breaking procedure due to George Gilbert.)
+Sometimes the method cannot produce a complete ranking: two candidates have identical support, or there's a rock-paper-scissors situation (A > B > C > A). When this happens the script flags it, the spreadsheet shows approximate rankings with a `~` prefix, and the graph shows where the ambiguity is. The chair then reviews the graph and chooses any ordering consistent with the arrows shown. The algorithm has already resolved everything it can; the remaining ambiguity is a genuine tie in voter preferences. (Tie-breaking procedure due to George Gilbert.)
 
 ## Edge cases
 

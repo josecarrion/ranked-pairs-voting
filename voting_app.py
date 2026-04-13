@@ -34,7 +34,6 @@ from ranked_pairs_voting import (
     compute_borda_scores,
     run_ranked_pairs,
     get_ranking_from_graph,
-    build_victory_graph,
     simplify_graph,
     create_results_excel,
     create_graph,
@@ -178,9 +177,6 @@ def main(page: ft.Page):
             rp_graph, unused_edges = run_ranked_pairs(matchup_matrix)
             ranking, has_ties, tie_desc = get_ranking_from_graph(rp_graph)
 
-            victory_graph = build_victory_graph(matchup_matrix)
-            simplified_victory = simplify_graph(victory_graph, ranking)
-
             # Simplify the ranked pairs graph for cleaner visualization
             # (removes transitive edges: if A > B > C, don't need A > C edge)
             simplified_rp_graph = simplify_graph(rp_graph, ranking)
@@ -190,7 +186,6 @@ def main(page: ft.Page):
                 borda_scores=borda_scores,
                 matchup_matrix=matchup_matrix,
                 ranked_pairs_graph=rp_graph,
-                victory_graph=simplified_victory,
                 unused_edges=unused_edges,
                 has_ties=has_ties,
                 tie_description=tie_desc,
@@ -203,24 +198,19 @@ def main(page: ft.Page):
             date_str = time.strftime("%Y-%m-%d")
             excel_path = Path(output_dir) / f"survey-results {date_str}.xlsx"
             rp_graph_path = Path(output_dir) / "resolved-ranking.pdf"
-            victory_graph_path = Path(output_dir) / "head-to-head-results.pdf"
 
             create_results_excel(results, candidates, excel_path, problematic)
 
-            # Try to create graphs (pygraphviz -> matplotlib fallback)
             graphs_created = False
             graph_files = []
             try:
                 title_text = "CHAIR REVIEW NEEDED" if has_ties else "Ranked Pairs Result"
                 rp_success, rp_actual_path = create_graph(simplified_rp_graph, rp_graph_path, title_text)
-                victory_success, victory_actual_path = create_graph(simplified_victory, victory_graph_path, "Victory Graph")
 
                 if rp_success:
                     graph_files.append(rp_actual_path.name)
-                if victory_success:
-                    graph_files.append(victory_actual_path.name)
 
-                graphs_created = rp_success or victory_success
+                graphs_created = rp_success
             except Exception as graph_error:
                 print(f"Graph generation failed: {graph_error}")
 

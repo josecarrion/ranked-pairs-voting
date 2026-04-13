@@ -9,7 +9,7 @@ Processes Qualtrics survey ballots and ranks candidates using:
 
 Outputs:
 - Excel file with rankings and matchup matrix
-- PDF graphs showing victory relationships
+- PDF graph of the resolved ranking
 
 When ties cannot be automatically resolved, the script flags this
 for manual intervention by the committee chair.
@@ -53,7 +53,6 @@ class VotingResults:
     borda_scores: dict[str, float]
     matchup_matrix: pd.DataFrame
     ranked_pairs_graph: nx.DiGraph
-    victory_graph: nx.DiGraph
     unused_edges: list[tuple[str, str, float]]
     has_ties: bool
     tie_description: str
@@ -355,32 +354,6 @@ def compute_borda_scores(matchup_matrix: pd.DataFrame) -> dict[str, float]:
 # =============================================================================
 # Ranked Pairs Algorithm
 # =============================================================================
-
-def build_victory_graph(matchup_matrix: pd.DataFrame) -> nx.DiGraph:
-    """
-    Build a directed graph of victories.
-
-    An edge from A to B means A beats B (positive margin).
-    Edge weight is the margin of victory.
-
-    Args:
-        matchup_matrix: Pairwise margin matrix
-
-    Returns:
-        Directed graph with victory edges
-    """
-    g = nx.DiGraph()
-    g.add_nodes_from(matchup_matrix.index)
-
-    for c1 in matchup_matrix.index:
-        for c2 in matchup_matrix.columns:
-            if c1 != c2:
-                margin = matchup_matrix.loc[c1, c2]
-                if margin is not None and margin > 0:
-                    g.add_edge(c1, c2, margin=margin)
-
-    return g
-
 
 def would_create_cycle(graph: nx.DiGraph, u: str, v: str) -> bool:
     """
@@ -904,10 +877,6 @@ def process_ballots(
         if has_ties:
             print(f"  {tie_desc}")
 
-    # Build victory graph for visualization
-    victory_graph = build_victory_graph(matchup_matrix)
-    simplified_victory = simplify_graph(victory_graph, ranking)
-
     # Simplify ranked pairs graph for cleaner visualization
     # (removes transitive edges: if A > B > C, don't need A > C edge)
     simplified_rp_graph = simplify_graph(rp_graph, ranking)
@@ -918,7 +887,6 @@ def process_ballots(
         borda_scores=borda_scores,
         matchup_matrix=matchup_matrix,
         ranked_pairs_graph=rp_graph,
-        victory_graph=simplified_victory,
         unused_edges=unused_edges,
         has_ties=has_ties,
         tie_description=tie_desc
@@ -928,20 +896,17 @@ def process_ballots(
     date_str = time.strftime("%Y-%m-%d")
     excel_path = output_dir / f"survey-results {date_str}.xlsx"
     rp_graph_path = output_dir / "resolved-ranking.pdf"
-    victory_graph_path = output_dir / "head-to-head-results.pdf"
 
     create_results_excel(results, candidates, excel_path, problematic)
 
     if verbose:
         print(f"Saved results to {excel_path}")
 
-    # Generate graphs (use simplified versions for cleaner output)
     title = "RANKED PAIRS - CHAIR REVIEW NEEDED" if has_ties else "Ranked Pairs Result"
     create_graph(simplified_rp_graph, rp_graph_path, title)
-    create_graph(simplified_victory, victory_graph_path, "Victory Graph")
 
     if verbose:
-        print(f"Saved graphs to {rp_graph_path} and {victory_graph_path}")
+        print(f"Saved graph to {rp_graph_path}")
 
     return results
 
